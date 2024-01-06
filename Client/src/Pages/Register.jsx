@@ -1,18 +1,33 @@
 import axios from 'axios';
-import React from 'react'
+import React, { useContext, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { UserContext } from '../Context/UserContext';
 
 const Register = () => {
+    const {setUsername, setId}=useContext(UserContext)
+
+    const [notification, setNotification]= useState('')
+
+
+
     const handleForm = async (event) => {
-        event.preventDefault();
-        const username = event.target.username.value;
-        const phone = event.target.phone.value;
-        const password = event.target.password.value;
+        try{
 
-        const response = await axios.post('/register', { username, phone, password });
+            event.preventDefault();
+            const username = event.target.username.value;
+            const phone = event.target.phone.value;
+            const password = event.target.password.value;
 
-        if (response.status == 201) {
-            console.log("created")
+            const response = await axios.post('/register', { username, phone, password });
+            
+            if (response.status == 201) {
+                    console.log(response)
+                setUsername(username);
+                setId(phone);
+            }
+        }catch(error){
+            console.log(error.response.data.message)
+setNotification(error.response.data.message)
         }
     }
     return (
@@ -20,6 +35,9 @@ const Register = () => {
         <div className='flex justify-center items-center h-screen bg-black'>
             <div className="w-[500px] bg-white rounded-xl h-fit">
                 <h1 className="text-center my-10 text-4xl font-mono">Register Here..</h1>
+               {!notification == '' && (
+                   <p className='w-full text-center text-red-600'>{notification}</p>
+               )}
                 <form className="px-10 py-3 tex-2xl flex gap-9 flex-col" onSubmit={handleForm}>
                     <div>
                         <label>Username</label>
