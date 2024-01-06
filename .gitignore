@@ -1,2 +1,2 @@
-./Client/mode_modules
-./Server/mode_modules
+./Client/node_modules
+./Server/node_modules

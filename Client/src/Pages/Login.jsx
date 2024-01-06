@@ -1,16 +1,34 @@
-import React from 'react'
+import axios from 'axios';
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const Login = () => {
+    const [notification, setNotification] = useState('');
     const navigate = useNavigate();
-    const handleForm = (event) => {
+    const handleForm = async(event) => {
         event.preventDefault()
-        navigate('/chat')
+        try{
+        const username = event.target.username.value;
+        const password = event.target.password.value;
+        
+            const response= await axios.post('/login',{username,password})
+            if (response.status == 200){
+                console.log(response);
+                navigate('/chat')
+            }
+        }catch(error){
+                setNotification(error.response.data.message)
+            }
+
     }
     return (
         <div className='flex justify-center items-center h-screen bg-black'>
             <div className="w-[500px] bg-white rounded-xl h-fit">
                 <h1 className="text-center my-10 text-4xl font-mono">Login Here..</h1>
+                {!notification == ''&&(
+                    <p className='text-center text-red-600 w-full'>{notification}</p>
+
+                )}
                 <form className="px-10 py-3 tex-2xl flex gap-9 flex-col" onSubmit={handleForm}>
                     <div>
 

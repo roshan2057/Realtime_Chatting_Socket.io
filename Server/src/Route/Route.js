@@ -9,8 +9,25 @@ router.get('/',(req,res)=>{
 
 
 router.post('/login',(req,res)=>{
-    
-    res.send('ok')
+    try{
+
+        console.log(req.body);
+        
+        res.cookie("cookie","this id token valkue",{maxAge:9000000,httpOnly:true,secure:false})
+        res.status(200).json({token:"this is token"})
+        // res.status(401).json({message:"Username and Password Error"})
+    }catch(error){
+        throw error
+    }
+})
+
+
+router.post('/register',(req,res)=>{
+    const  token = req.headers.cookie.split('=')[1]
+   console.log(token)
+    const {username, phone , password}= req.body;
+
+    res.status(201).json({token:"token"})
 })
 
 
