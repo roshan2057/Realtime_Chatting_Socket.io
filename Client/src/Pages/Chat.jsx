@@ -1,19 +1,67 @@
-import React, { useState } from 'react'
-import Chatting_box from './Components/Chatting_box';
-
+import React, { useEffect, useState } from 'react'
+import socket from '../Socket'
 const Chat = () => {
-    const friends = [
-        { id: 1, name: 'Roshan' },
-        { id: 2, name: 'kumar' },
-        { id: 3, name: 'Pujan' },
-        { id: 4, name: 'Agraj' }
-    ];
+    const [ws, setWs]= useState(null)
+const [friends, setFriends]= useState([])
+
+
+useEffect(() => {
+    setWs(socket);
+
+    socket.on('connect', () => {
+        console.log(socket.id);
+    });
+
+    socket.on("online", (data) => {
+        console.log("updated");
+        setFriends(data);
+    });
+
+    return () => {
+        socket.off('connect');
+        socket.off('online');
+    };
+}, []);
+    
+    
+
+
     
     const [selectedname, setSelectedname] = useState('')
+    const [selecteduserid, setSelectedUserid] = useState('')
     const [selectedid, setSelectedid] = useState('')
-    const selectPerson = (id, name) => {
-        setSelectedname(name);
+    const selectPerson = (id, userid, name ) => {
         setSelectedid(id)
+        setSelectedUserid(userid)
+        setSelectedname(name);
+    }
+
+    const send_message = (e) => {
+        e.preventDefault()
+        const message = document.querySelector("#text_box");
+        const messageBox = document.querySelector(".message-box");
+
+        const lastChild = messageBox.lastElementChild;
+
+        if (lastChild.classList.contains("sent")) {
+            const newParagraph = document.createElement("p");
+            newParagraph.textContent = message.value;
+            lastChild.appendChild(newParagraph);
+
+        } else if (lastChild.classList.contains("receive")) {
+            const receiveDiv = document.createElement("div");
+            receiveDiv.classList.add("sent");
+            const paragraph = document.createElement("p");
+            paragraph.textContent = message.value;
+            receiveDiv.appendChild(paragraph);
+            messageBox.appendChild(receiveDiv);
+        } else {
+            console.log("Last child does not have a specific class.");
+        }
+        messageBox.scrollTop = messageBox.scrollHeight;
+        const text = {id:selectedid , userid:selecteduserid, text:message.value}        
+        ws.emit("client",text)
+        message.value = "";
     }
 
     return (
@@ -30,7 +78,7 @@ const Chat = () => {
                         <ul className='overflow-y-auto scrollbar-hidden h-[29rem]'>
                             {friends.map((element, index) => (
                                 <li key={index} className='py-3 rounded-md md:pl-3 flex cursor-pointer hover:bg-blue-500 hover:text-white'
-                                    onClick={() => { selectPerson(element.id, element.name) }}>
+                                    onClick={() => { selectPerson(element.id, element.userid, element.name) }}>
                                     <img src='/avtar.png' alt='avtar' className='px-1' width={30} />
                                     {element.name}
                                 </li>
@@ -38,7 +86,18 @@ const Chat = () => {
                         </ul>
                     </div>
                     {!selectedid == '' ? (
-                        <Chatting_box id={selectedid} />
+                        <div className='flex w-full flex-col justify-between'>
+                        <div className="message-box px-5 w-full overflow-x-hidden overflow-y-auto sm:h-[30rem] h-[30rem]">
+                            <div className="receive" id="receive_box">
+                            </div>
+                        </div>
+                        <div className='border-2 h-fit'>
+                            <form className='flex p-2'>
+                                <input type='text' className='w-full rounded-sm pl-3 py-1' placeholder='Type the message' id='text_box' />
+                                <button type='submit' className='bg-blue-500 px-3 ml-3 rounded-md' onClick={send_message} >Send</button>
+                            </form>
+                        </div>
+                    </div>
                     ) :
                         (
                             <div className=' w-full flex justify-center items-center'>
