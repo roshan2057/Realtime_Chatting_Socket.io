@@ -1,8 +1,10 @@
 import axios from 'axios';
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { UserContext } from '../Context/UserContext';
 
 const Login = () => {
+    const {setUsername, setId} = useContext(UserContext)
     const [notification, setNotification] = useState('');
     const navigate = useNavigate();
     const handleForm = async(event) => {
@@ -13,7 +15,8 @@ const Login = () => {
         
             const response= await axios.post('/login',{username,password})
             if (response.status == 200){
-                console.log(response);
+                setUsername(response.data.username)
+                setId(response.data.id)
                 navigate('/chat')
             }
         }catch(error){
@@ -22,8 +25,8 @@ const Login = () => {
 
     }
     return (
-        <div className='flex justify-center items-center h-screen bg-black'>
-            <div className="w-[500px] bg-white rounded-xl h-fit">
+        <div className='flex justify-center md:items-center h-screen overflow-y-hidden   bg-black'>
+            <div className="w-[500px] m-6 md:m-0 bg-white rounded-xl h-fit">
                 <h1 className="text-center my-10 text-4xl font-mono">Login Here..</h1>
                 {!notification == ''&&(
                     <p className='text-center text-red-600 w-full'>{notification}</p>
