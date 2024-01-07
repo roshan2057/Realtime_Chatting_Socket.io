@@ -1,25 +1,38 @@
 import { verifyToken } from "../Controller/JsToken.js";
 import io from "../Services/Socket.js";
-const friends = [];
+var friends = [];
 
 io.on("connection", (socket) => {
-  console.log(`connedted ${socket.id}`);
-  friends.push({ id: socket.id, name: "random", userid: "idnumber" });
 
-  socket.emit("online", friends);
-
-  socket.on("disconnect", () => {
-    friends.forEach((friend, index) => {
-      if (friend.id === socket.id) {
-        friends.splice(index, 1);
-      }
+    socket.on("connect", () => {
+       console.log("connect")
     });
-    console.log("disconnect");
-    socket.emit("online", friends);
-    console.log(friends);
-  });
+  console.log(`connedted ${socket.id}`);
+  const tokenString = socket.handshake.headers.cookie;
+  if (tokenString) {
+    const token = tokenString.split("=")[1];
+    const data = verifyToken(token);
+    friends.push({ id: socket.id, name: data.username, userid: data.id });
+}
 
-  socket.on("client", (message) => {
-    console.log(message);
-  });
+
+
+    socket.on("client", (message) => {
+        socket.to(message.id).emit("server", message.text);
+    });
+    
+    socket.on("disconnect", () => {
+        friends = friends.filter((friend) => friend.id !== socket.id);
+        io.emit("online", friends);
+    });
+    
+    io.emit("online", friends);
+    console.log(socket.id);
+
+
+
+
+
+
+
 });
