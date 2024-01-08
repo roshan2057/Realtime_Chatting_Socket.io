@@ -11,8 +11,10 @@ export const login = async (req, res) => {
     } else if (check.password != password) {
       return res.status(404).json({ message: "Password incorrect" });
     } else {
-
-       const token = await createToken({id:check.id, username:check.username});
+      const token = await createToken({
+        id: check.id,
+        username: check.username,
+      });
       res.cookie("token", token, {
         httpOnly: true,
         secure: false,
@@ -34,7 +36,7 @@ export const regiser = async (req, res) => {
         .json({ message: "Username already registered try another name" });
     }
     const add = await User.create({ username, phone, password, gender });
-    const token = await createToken({id:add.id, username:add.username});
+    const token = await createToken({ id: add.id, username: add.username });
     res.cookie("token", token, {
       httpOnly: true,
       secure: false,
@@ -46,28 +48,44 @@ export const regiser = async (req, res) => {
 };
 
 export const profile = async (req, res) => {
-    try{
-
-        const token = req.headers.cookie.split("=")[1];
-        const data = (verifyToken(token));
-        if(!data){
-         return res.status(401).json({message:"Invalid Token"});
-        }
-         res.status(200).json({id:data.id, username:data.username})
-    }catch(error){
-        res.status(400).json({message:"No token"})
+  try {
+    const token = req.headers.cookie.split("=")[1];
+    const data = verifyToken(token);
+    if (!data) {
+      return res.status(401).json({ message: "Invalid Token" });
     }
+    res.status(200).json({ id: data.id, username: data.username });
+  } catch (error) {
+    res.status(400).json({ message: "No token" });
+  }
 };
 
-
-
-
-export const save_message = async(data)=>{
-  try{
-
-    const {to:receiver , from:sender , text:text} = data;
-    await Message.create({receiver,sender,text})
-  }catch(error){
-    console.error(error)
+export const save_message = async (data) => {
+  try {
+    const { to: receiver, from: sender, text: text } = data;
+    await Message.create({ receiver, sender, text });
+  } catch (error) {
+    console.error(error);
   }
-}
+};
+
+export const get_messages = async (req, res) => {
+  try {
+    const to = req.query.id;
+    const token = req.headers.cookie.split("=")[1];
+    const data = verifyToken(token);
+    if (!data) {
+      return res.status(401).json({ message: "Invalid Token" });
+    }
+    const from = data.id;
+    const messages = await Message.find({
+      $or: [
+        { sender: from, receiver: to },
+        { sender: to, receiver: from },
+      ],
+    });
+    res.status(200).json(JSON.stringify(messages));
+  } catch (error) {
+    console.error(error);
+  }
+};
