@@ -1,17 +1,20 @@
 import React, { useContext, useEffect, useState } from 'react'
-// import socket from '../Socket'
 import { io } from 'socket.io-client'
 import { UserContext } from '../Context/UserContext'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+
 const Chat = () => {
     const [ws, setWs] = useState()
     const [friends, setFriends] = useState([])
     const [selectedname, setSelectedname] = useState('')
     const [selecteduserid, setSelectedUserid] = useState('')
     const [selectedid, setSelectedid] = useState('')
-    const { id: userId } = useContext(UserContext)
+    const { id: userId, username: loginname } = useContext(UserContext)
     const [newMessage, setNewmessage] = useState({});
     const [apiMessages, setapiMessage] = useState([])
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const socket = io("http://localhost:5000", { reconnection: true, withCredentials: true })
@@ -35,21 +38,21 @@ const Chat = () => {
     const receiveMessage = (msg) => {
         const messageBox = document.querySelector(".message-box");
 
-        if (messageBox) {          
-                const lastChild = messageBox.lastElementChild;
-                if (!lastChild.classList.contains("sent")) {
-                    const newParagraph = document.createElement("p");
-                    newParagraph.textContent = msg.text;
-                    lastChild.appendChild(newParagraph);
-                } else {
-                    const receiveDiv = document.createElement("div");
-                    receiveDiv.classList.add("receive");
-                    const paragraph = document.createElement("p");
-                    paragraph.textContent = msg.text;
-                    receiveDiv.appendChild(paragraph);
-                    messageBox.appendChild(receiveDiv);
-                }
-                messageBox.scrollTop = messageBox.scrollHeight;            
+        if (messageBox) {
+            const lastChild = messageBox.lastElementChild;
+            if (!lastChild.classList.contains("sent")) {
+                const newParagraph = document.createElement("p");
+                newParagraph.textContent = msg.text;
+                lastChild.appendChild(newParagraph);
+            } else {
+                const receiveDiv = document.createElement("div");
+                receiveDiv.classList.add("receive");
+                const paragraph = document.createElement("p");
+                paragraph.textContent = msg.text;
+                receiveDiv.appendChild(paragraph);
+                messageBox.appendChild(receiveDiv);
+            }
+            messageBox.scrollTop = messageBox.scrollHeight;
         }
         else {
             const friend = document.querySelector(`#${msg.from}`)
@@ -110,34 +113,45 @@ const Chat = () => {
         message.value = "";
     }
 
+
+    const logout = () => {
+        document.cookie = 'token' + '=; Max-Age=-99999999;';
+        navigate('/');
+    }
+
     return (
         <div className='flex justify-center md:items-center w-screen md:h-screen mt-2 md:mt-0'>
             <div className='bg-gray-400 w-full mx-2 md:w-1/2 h-fit rounded-lg'>
                 <header className='flex justify-between px-4 py-5 w-full border-b-2'>
                     <div className='cursor-pointer' onClick={() => { setSelectedname(''); setSelectedid('') }}>Back</div>
                     <div>{selectedname}</div>
-                    <div>info</div>
+                    <div>{loginname}</div>
                 </header>
                 <div className='flex w-full'>
                     <div className='md:block  sm:w-1/3 md:px-4 px-1 border-r-2'>
                         <h1 className='text-center text-3xl py-4'> Friends</h1>
                         <ul className='overflow-y-auto scrollbar-hidden h-[29rem]'>
                             {friends.map((element, index) => (
-                                <li key={index} className='relative bg-gray-200 my-3 py-1 rounded-md md:pl-3 flex cursor-pointer hover:bg-blue-500 hover:text-white flex-col-rev h-15'
-                                    id={element.id}
-                                    onClick={() => { selectPerson(element.id, element.userid, element.name) }}>
-                                    <img src='/avtar.png' alt='avtar' className='px-1 w-10 h-8' />
-                                    <div className='text-sm sm:w-32'>
-                                        {element.name}
-                                    </div>
-                                    <p className='rounded-full text-sm absolute right-0'></p>
-                                </li>
+                                (userId !== element.userid) && (
+                                    <li key={index} className='relative bg-gray-200 my-3 py-1 rounded-md md:pl-3 flex cursor-pointer hover:bg-blue-500 hover:text-white flex-col-rev h-15'
+                                        id={element.id}
+                                        onClick={() => { selectPerson(element.id, element.userid, element.name) }}>
+                                        <img src='/avtar.png' alt='avtar' className='px-1 w-10 h-8' />
+                                        <div className='text-sm sm:w-32'>
+                                            {element.name}
+                                        </div>
+                                        <p className='rounded-full text-sm absolute right-0'></p>
+                                    </li>
+                                )
                             ))}
                         </ul>
+                        <div className='flex justify-center'>
+                            <button className='bg-blue-500 text-white py-1 px-2 rounded-md' onClick={logout}>Logout</button>
+                        </div>
                     </div>
                     {!selectedid == '' ? (
                         <div className='flex w-full flex-col justify-between'>
-                            <div className="message-box px-5 w-full overflow-x-hidden overflow-y-auto sm:h-[30rem] h-[30rem]">
+                            <div className="message-box px-5 w-full overflow-x-hidden overflow-y-auto sm:h-[32rem] h-[32rem]">
                                 <div className="receive" id="receive_box">
                                 </div>
                                 {apiMessages.map((msg, index) => {

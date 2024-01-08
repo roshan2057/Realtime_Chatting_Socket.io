@@ -16,7 +16,7 @@ export const login = async (req, res) => {
         username: check.username,
       });
       res.cookie("token", token, {
-        httpOnly: true,
+        // httpOnly: true,
         secure: false,
       });
       res.status(200).json({ id: check.id, username: check.username });
@@ -38,7 +38,7 @@ export const regiser = async (req, res) => {
     const add = await User.create({ username, phone, password, gender });
     const token = await createToken({ id: add.id, username: add.username });
     res.cookie("token", token, {
-      httpOnly: true,
+      // httpOnly: true,
       secure: false,
     });
     res.status(201).json({ id: add.id, username: add.username });
