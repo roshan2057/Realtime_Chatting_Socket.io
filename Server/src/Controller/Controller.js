@@ -1,3 +1,4 @@
+import Message from "../Model/Message.js";
 import User from "../Model/User.js";
 import { createToken, verifyToken } from "./JsToken.js";
 
@@ -57,3 +58,16 @@ export const profile = async (req, res) => {
         res.status(400).json({message:"No token"})
     }
 };
+
+
+
+
+export const save_message = async(data)=>{
+  try{
+
+    const {to:receiver , from:sender , text:text} = data;
+    await Message.create({receiver,sender,text})
+  }catch(error){
+    console.error(error)
+  }
+}

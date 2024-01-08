@@ -8,7 +8,7 @@ const Chat = () => {
     const [selectedname, setSelectedname] = useState('')
     const [selecteduserid, setSelectedUserid] = useState('')
     const [selectedid, setSelectedid] = useState('')
-    const { username } = useContext(UserContext)
+    const { id } = useContext(UserContext)
 
     useEffect(() => {
         const socket = io("http://localhost:5000",{reconnection: true, withCredentials:true})
@@ -77,7 +77,7 @@ const Chat = () => {
             console.log("Last child does not have a specific class.");
         }
         messageBox.scrollTop = messageBox.scrollHeight;
-        const text = { id: selectedid, userid: selecteduserid, text: message.value }
+        const text = { id: selectedid, to: selecteduserid, from:id,  text: message.value }
         ws.emit("client", text)
         message.value = "";
     }

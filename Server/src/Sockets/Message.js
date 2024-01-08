@@ -1,3 +1,4 @@
+import { save_message } from "../Controller/Controller.js";
 import { verifyToken } from "../Controller/JsToken.js";
 import io from "../Services/Socket.js";
 var friends = [];
@@ -14,10 +15,8 @@ io.on("connection", (socket) => {
     const data = verifyToken(token);
     friends.push({ id: socket.id, name: data.username, userid: data.id });
 }
-
-
-
     socket.on("client", (message) => {
+        save_message(message);
         socket.to(message.id).emit("server", message.text);
     });
     
@@ -28,11 +27,5 @@ io.on("connection", (socket) => {
     
     io.emit("online", friends);
     console.log(socket.id);
-
-
-
-
-
-
 
 });
