@@ -4,11 +4,11 @@ import cors from 'cors';
 import '../Model/Dbconnection.js'
 
 const app = express();
-const PORT = process.env.EXPRESS_PORT || 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors({
     credentials: true,
-    origin:'http://localhost:5173'
+    origin: process.env.CLIENT_URL || 'http://localhost:5173'
 }))
 
 app.use(express.json());
@@ -16,7 +16,8 @@ app.use(express.urlencoded({extended: false}));
 
 app.use('/',router)
 
-app.listen(PORT,()=>{
-    console.log(`Express server running in ${PORT}`)
+const server = app.listen(PORT,()=>{
+    console.log(`Server running in ${PORT}`)
 })
 
+export default server

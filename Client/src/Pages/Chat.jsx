@@ -17,7 +17,11 @@ const Chat = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const socket = io(import.meta.env.VITE_SOCKET_API, { reconnection: true, withCredentials: true })
+        const socket = io(import.meta.env.VITE_SERVER_URL,
+            {
+                reconnection: true,
+                withCredentials: true
+            })
         setWs(socket);
         socket.on('connect', () => {
             console.log(socket.id);

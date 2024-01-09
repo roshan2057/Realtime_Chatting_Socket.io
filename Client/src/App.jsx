@@ -4,7 +4,7 @@ import axios from 'axios';
 import UserContextProvider from "./Context/UserContext";
 
 function App() {
-  axios.defaults.baseURL = import.meta.env.VITE_EXPRESS_API;
+  axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
 axios.defaults.withCredentials = true;
   return (
     <BrowserRouter>
