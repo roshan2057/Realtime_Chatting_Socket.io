@@ -11,13 +11,13 @@ const Chat = () => {
     const [selecteduserid, setSelectedUserid] = useState('')
     const [selectedid, setSelectedid] = useState('')
     const { id: userId, username: loginname } = useContext(UserContext)
-    const [newMessage, setNewmessage] = useState({});
+    const [newMessage, setNewmessage] = useState([]);
     const [apiMessages, setapiMessage] = useState([])
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        const socket = io("http://localhost:5000", { reconnection: true, withCredentials: true })
+        const socket = io(import.meta.env.VITE_SOCKET_API, { reconnection: true, withCredentials: true })
         setWs(socket);
         socket.on('connect', () => {
             console.log(socket.id);
@@ -25,66 +25,70 @@ const Chat = () => {
         socket.on("online", (data) => {
             setFriends(data);
         });
-
         socket.on('server', receiveMessage);
-
         return () => {
             socket.disconnect();
         }
-
     }, []);
 
 
     const receiveMessage = (msg) => {
         const messageBox = document.querySelector(".message-box");
-
         if (messageBox) {
             const lastChild = messageBox.lastElementChild;
-            if (!lastChild.classList.contains("sent")) {
-                const newParagraph = document.createElement("p");
-                newParagraph.textContent = msg.text;
-                lastChild.appendChild(newParagraph);
+            if (messageBox.id === msg.from) {
+                console.log("message")
+                if (!lastChild.classList.contains("sent")) {
+                    const newParagraph = document.createElement("p");
+                    newParagraph.textContent = msg.text;
+                    lastChild.appendChild(newParagraph);
+                } else {
+                    const receiveDiv = document.createElement("div");
+                    receiveDiv.classList.add("receive");
+                    const paragraph = document.createElement("p");
+                    paragraph.textContent = msg.text;
+                    receiveDiv.appendChild(paragraph);
+                    messageBox.appendChild(receiveDiv);
+                }
             } else {
-                const receiveDiv = document.createElement("div");
-                receiveDiv.classList.add("receive");
-                const paragraph = document.createElement("p");
-                paragraph.textContent = msg.text;
-                receiveDiv.appendChild(paragraph);
-                messageBox.appendChild(receiveDiv);
+                setNewmessage(prevMessage => {
+                    if (!prevMessage.includes(msg.from)) {
+                        return [...prevMessage, msg.from];
+                    } else {
+                        return prevMessage;
+                    }
+                });
             }
             messageBox.scrollTop = messageBox.scrollHeight;
         }
         else {
-            const friend = document.querySelector(`#${msg.from}`)
-            setNewmessage(msg.from);
-            const p = friend.querySelector('p');
-            p.innerHTML = "New"
+            setNewmessage(prevMessage => {
+                if (!prevMessage.includes(msg.from)) {
+                    return [...prevMessage, msg.from];
+                } else {
+                    return prevMessage;
+                }
+            });
+            console.log(newMessage)
         }
-
     };
-
 
 
     // friends selected 
     const selectPerson = async (id, userid, name) => {
+        setapiMessage([])
         setSelectedid(id)
         setSelectedUserid(userid)
         setSelectedname(name);
-        setapiMessage([])
         try {
-
-            if (id === newMessage) {
-                const friend = document.querySelector(`#${id}`)
-                const p = friend.querySelector('p');
-                p.innerHTML = ""
-
+            if (newMessage.includes(id)) {
+                setNewmessage(prevMessage => prevMessage.filter(item => item !== id))
             }
             const response = await axios.get(`/messages?id=${userid}`);
             setapiMessage(JSON.parse(response.data))
         } catch (error) {
             console.error(error)
         }
-
     }
 
     const send_message = (e) => {
@@ -134,13 +138,12 @@ const Chat = () => {
                             {friends.map((element, index) => (
                                 (userId !== element.userid) && (
                                     <li key={index} className='relative bg-gray-200 my-3 py-1 rounded-md md:pl-3 flex cursor-pointer hover:bg-blue-500 hover:text-white flex-col-rev h-15'
-                                        id={element.id}
                                         onClick={() => { selectPerson(element.id, element.userid, element.name) }}>
                                         <img src='/avtar.png' alt='avtar' className='px-1 w-10 h-8' />
                                         <div className='text-sm sm:w-32'>
                                             {element.name}
                                         </div>
-                                        <p className='rounded-full text-sm absolute right-0'></p>
+                                        <p className='rounded-full text-sm absolute right-0'>{(newMessage.includes(element.id)) ? ("New") : ("")}</p>
                                     </li>
                                 )
                             ))}
@@ -151,7 +154,7 @@ const Chat = () => {
                     </div>
                     {!selectedid == '' ? (
                         <div className='flex w-full flex-col justify-between'>
-                            <div className="message-box px-5 w-full overflow-x-hidden overflow-y-auto sm:h-[32rem] h-[32rem]">
+                            <div className="message-box px-5 w-full overflow-x-hidden overflow-y-auto sm:h-[32rem] h-[32rem]" id={selectedid}>
                                 <div className="receive" id="receive_box">
                                 </div>
                                 {apiMessages.map((msg, index) => {
