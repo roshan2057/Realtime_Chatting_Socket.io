@@ -1,6 +1,9 @@
 import Message from "../Model/Message.js";
 import User from "../Model/User.js";
+import client from "../Services/Redis.js";
 import { createToken, verifyToken } from "./JsToken.js";
+
+const redis_timeout = 300; // i.e 5 minutes
 
 export const login = async (req, res) => {
   try {
@@ -56,6 +59,7 @@ export const profile = async (req, res) => {
     }
     res.status(200).json({ id: data.id, username: data.username });
   } catch (error) {
+    console.log(error);
     res.status(400).json({ message: "No token" });
   }
 };
@@ -78,13 +82,20 @@ export const get_messages = async (req, res) => {
       return res.status(401).json({ message: "Invalid Token" });
     }
     const from = data.id;
-    const messages = await Message.find({
-      $or: [
-        { sender: from, receiver: to },
-        { sender: to, receiver: from },
-      ],
-    });
-    res.status(200).json(JSON.stringify(messages));
+    const user_msg = await client.get(data.id);
+    if (user_msg) {
+      console.log('redis hit')
+      return res.status(200).json(user_msg);
+    } else {
+      const messages = await Message.find({
+        $or: [
+          { sender: from, receiver: to },
+          { sender: to, receiver: from },
+        ],
+      });
+      res.status(200).json(JSON.stringify(messages));
+      client.setEx(data.id, redis_timeout, JSON.stringify(messages));
+    }
   } catch (error) {
     console.error(error);
   }
